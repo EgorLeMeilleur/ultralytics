@@ -1,9 +1,9 @@
-# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+# Ultralytics YOLO 🚀, AGPL-3.0 license
 """
 Run prediction on images, videos, directories, globs, YouTube, webcam, streams, etc.
 
 Usage - sources:
-    $ yolo mode=predict model=yolo11n.pt source=0                               # webcam
+    $ yolo mode=predict model=yolov8n.pt source=0                               # webcam
                                                 img.jpg                         # image
                                                 vid.mp4                         # video
                                                 screen                          # screenshot
@@ -15,21 +15,19 @@ Usage - sources:
                                                 'rtsp://example.com/media.mp4'  # RTSP, RTMP, HTTP, TCP stream
 
 Usage - formats:
-    $ yolo mode=predict model=yolo11n.pt                 # PyTorch
-                              yolo11n.torchscript        # TorchScript
-                              yolo11n.onnx               # ONNX Runtime or OpenCV DNN with dnn=True
-                              yolo11n_openvino_model     # OpenVINO
-                              yolo11n.engine             # TensorRT
-                              yolo11n.mlpackage          # CoreML (macOS-only)
-                              yolo11n_saved_model        # TensorFlow SavedModel
-                              yolo11n.pb                 # TensorFlow GraphDef
-                              yolo11n.tflite             # TensorFlow Lite
-                              yolo11n_edgetpu.tflite     # TensorFlow Edge TPU
-                              yolo11n_paddle_model       # PaddlePaddle
-                              yolo11n.mnn                # MNN
-                              yolo11n_ncnn_model         # NCNN
-                              yolo11n_imx_model          # Sony IMX
-                              yolo11n_rknn_model         # Rockchip RKNN
+    $ yolo mode=predict model=yolov8n.pt                 # PyTorch
+                              yolov8n.torchscript        # TorchScript
+                              yolov8n.onnx               # ONNX Runtime or OpenCV DNN with dnn=True
+                              yolov8n_openvino_model     # OpenVINO
+                              yolov8n.engine             # TensorRT
+                              yolov8n.mlpackage          # CoreML (macOS-only)
+                              yolov8n_saved_model        # TensorFlow SavedModel
+                              yolov8n.pb                 # TensorFlow GraphDef
+                              yolov8n.tflite             # TensorFlow Lite
+                              yolov8n_edgetpu.tflite     # TensorFlow Edge TPU
+                              yolov8n_paddle_model       # PaddlePaddle
+                              yolov8n.mnn                # MNN
+                              yolov8n_ncnn_model         # NCNN
 """
 
 import platform
@@ -155,11 +153,7 @@ class BasePredictor:
             (list): A list of transformed images.
         """
         same_shapes = len({x.shape for x in im}) == 1
-        letterbox = LetterBox(
-            self.imgsz,
-            auto=same_shapes and (self.model.pt or (getattr(self.model, "dynamic", False) and not self.model.imx)),
-            stride=self.model.stride,
-        )
+        letterbox = LetterBox(self.imgsz, auto=same_shapes and self.model.pt, stride=self.model.stride)
         return [letterbox(image=x) for x in im]
 
     def postprocess(self, preds, img, orig_imgs):
@@ -209,20 +203,20 @@ class BasePredictor:
             buffer=self.args.stream_buffer,
         )
         self.source_type = self.dataset.source_type
-        if not getattr(self, "stream", True) and (
-            self.source_type.stream
-            or self.source_type.screenshot
-            or len(self.dataset) > 1000  # many images
-            or any(getattr(self.dataset, "video_flag", [False]))
-        ):  # videos
-            LOGGER.warning(STREAM_WARNING)
+        # if not getattr(self, "stream", True) and (
+        #     self.source_type.stream
+        #     or self.source_type.screenshot
+        #     or len(self.dataset) > 1000  # many images
+        #     or any(getattr(self.dataset, "video_flag", [False]))
+        # ):  # videos
+        #     LOGGER.warning(STREAM_WARNING)
         self.vid_writer = {}
 
     @smart_inference_mode()
     def stream_inference(self, source=None, model=None, *args, **kwargs):
         """Streams real-time inference on camera feed and saves results to file."""
-        if self.args.verbose:
-            LOGGER.info("")
+        # if self.args.verbose:
+        #     LOGGER.info("")
 
         # Setup model
         if not self.model:
@@ -281,8 +275,8 @@ class BasePredictor:
                         s[i] += self.write_results(i, Path(paths[i]), im, s)
 
                 # Print batch results
-                if self.args.verbose:
-                    LOGGER.info("\n".join(s))
+                # if self.args.verbose:
+                #     LOGGER.info("\n".join(s))
 
                 self.run_callbacks("on_predict_batch_end")
                 yield from self.results
@@ -295,14 +289,14 @@ class BasePredictor:
         # Print final results
         if self.args.verbose and self.seen:
             t = tuple(x.t / self.seen * 1e3 for x in profilers)  # speeds per image
-            LOGGER.info(
-                f"Speed: %.1fms preprocess, %.1fms inference, %.1fms postprocess per image at shape "
-                f"{(min(self.args.batch, self.seen), 3, *im.shape[2:])}" % t
-            )
+            # LOGGER.info(
+            #     f"Speed: %.1fms preprocess, %.1fms inference, %.1fms postprocess per image at shape "
+            #     f"{(min(self.args.batch, self.seen), 3, *im.shape[2:])}" % t
+            # )
         if self.args.save or self.args.save_txt or self.args.save_crop:
             nl = len(list(self.save_dir.glob("labels/*.txt")))  # number of labels
             s = f"\n{nl} label{'s' * (nl > 1)} saved to {self.save_dir / 'labels'}" if self.args.save_txt else ""
-            LOGGER.info(f"Results saved to {colorstr('bold', self.save_dir)}{s}")
+            # LOGGER.info(f"Results saved to {colorstr('bold', self.save_dir)}{s}")
         self.run_callbacks("on_predict_end")
 
     def setup_model(self, model, verbose=True):
@@ -369,7 +363,7 @@ class BasePredictor:
         # Save videos and streams
         if self.dataset.mode in {"stream", "video"}:
             fps = self.dataset.fps if self.dataset.mode == "video" else 30
-            frames_path = f"{save_path.split('.', 1)[0]}_frames/"
+            frames_path = f'{save_path.split(".", 1)[0]}_frames/'
             if save_path not in self.vid_writer:  # new video
                 if self.args.save_frames:
                     Path(frames_path).mkdir(parents=True, exist_ok=True)
